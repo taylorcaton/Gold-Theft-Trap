@@ -11,28 +11,6 @@ firebase.initializeApp(config);
 
 var database = firebase.database();
 
-//Sign-in anonymously
-firebase.auth().signInAnonymously().catch(function(error) {
-  // Handle Errors here.
-  var errorCode = error.code;
-  var errorMessage = error.message;
-  // ...
-});
-
-firebase.auth().onAuthStateChanged(function(usert) {
-  if (usert) {
-    // User is signed in.
-    user.isAnonymous = usert.isAnonymous;
-    user.uid = usert.uid;
-    initChat(user)
-    // ...
-  } else {
-    // User is signed out.
-    // ...
-  }
-  // ...
-});
-
 var playerID;
 var gameReady = false;
 var user = {};
@@ -71,7 +49,7 @@ connectionsRef.on("value", function(snap) {
     gameWait();
     playerID = 1;
     // user.uid = 1;
-    user.displayName = "Player 1"
+    // user.displayName = "Player 1"
     gameReady = false;
 
   }else if(snap.numChildren() === 2){
@@ -79,7 +57,7 @@ connectionsRef.on("value", function(snap) {
     if(playerID !== 1){
       playerID = 2;
       // user.uid = 2;
-      user.displayName = "Player 2"
+      // user.displayName = "Player 2"
     }
 
     gameReady = true;
@@ -150,5 +128,52 @@ function initChat(user) {
   var chat = new FirechatUI(chatRef, document.getElementById("firechat-wrapper"));
 
   // Set the Firechat user
-  // chat.setUser(user.uid);
+  chat.setUser(user.uid, user.displayName);
+  // chat.enterRoom("-Kp2sj1kuUjiQ4BqXazL")
 }
+
+function login() {
+
+  var provider = new firebase.auth.GoogleAuthProvider();
+  //Sign-in with Google
+  firebase.auth().signInWithPopup(provider).then(function(result) {
+    // This gives you a Google Access Token. You can use it to access the Google API.
+    var token = result.credential.accessToken;
+    // The signed-in user info.
+    var user = result.user;
+    // ...
+  }).catch(function(error) {
+    // Handle Errors here.
+    var errorCode = error.code;
+    var errorMessage = error.message;
+    // The email of the user's account used.
+    var email = error.email;
+    // The firebase.auth.AuthCredential type that was used.
+    var credential = error.credential;
+    // ...
+    debugger;
+  });
+}
+
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    // User is signed in.
+    user.uid = usert.uid;
+    initChat(user)
+    // ...
+  } else {
+    // User is signed out.
+    // ...
+  }
+  // ...
+});
+
+firebase.auth().signOut().then(function() {
+  // Sign-out successful.
+}).catch(function(error) {
+  // An error happened.
+});
+
+$(document).on("click","#auth",function(){
+  login();
+})
