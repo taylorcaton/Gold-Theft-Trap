@@ -1,0 +1,10 @@
+body{
+	background: url('../images/wildWest.jpg');
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-color: #c5a076;
+}
+
+.gameWindow{
+	display: none;
+}
