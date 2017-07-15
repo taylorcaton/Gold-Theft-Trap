@@ -134,16 +134,14 @@ function initChat() {
   
 }
 
-function login() {
-  firebase.auth().signInAnonymously().catch(function(error) {
+firebase.auth().signInAnonymously().catch(function(error) {
     // Handle Errors here.
     var errorCode = error.code;
     var errorMessage = error.message;
     // ...
     console.log(errorCode)
     console.log(errorMessage)
-  });
-}
+});
 
 firebase.auth().onAuthStateChanged(function(usert) {
   if (usert) {
