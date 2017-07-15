@@ -90,7 +90,7 @@ function buildGameArea(){
     $(".gameWindow").show();
 
     buildButtons();
-    //initChat();
+    initChat();
   }else{
     $(".gameWindow").hide();
   }
@@ -120,31 +120,35 @@ $(document).on("click", ".gameButton", function(){
 })
 
 //Firechat
-function initChat(user) {
+function initChat() {
   // Get a Firebase Database ref
   var chatRef = database.ref("chat");
 
   // Create a Firechat instance
   var chat = new FirechatUI(chatRef, document.getElementById("firechat-wrapper"));
-
+  
   // Set the Firechat user
-  chat.setUser(user.uid, user.displayName);
-  // chat.enterRoom("-Kp2sj1kuUjiQ4BqXazL")
+  chat.setUser(user.uid, "Player " + playerID, function(user){
+    chat.resumeSession();
+  });
+  
 }
 
 function login() {
-    // Log the user in via Twitter
-    var provider = new firebase.auth.TwitterAuthProvider();
-    firebase.auth().signInWithPopup(provider).catch(function(error) {
-      console.log("Error authenticating user:", error);
-    });
-  }
+  firebase.auth().signInAnonymously().catch(function(error) {
+    // Handle Errors here.
+    var errorCode = error.code;
+    var errorMessage = error.message;
+    // ...
+    console.log(errorCode)
+    console.log(errorMessage)
+  });
+}
 
-firebase.auth().onAuthStateChanged(function(user) {
-  if (user) {
+firebase.auth().onAuthStateChanged(function(usert) {
+  if (usert) {
     // User is signed in.
     user.uid = usert.uid;
-    initChat(user)
     // ...
   } else {
     // User is signed out.
@@ -152,7 +156,3 @@ firebase.auth().onAuthStateChanged(function(user) {
   }
   // ...
 });
-
-$(document).on("click","#auth",function(){
-  login();
-})
