@@ -8,3 +8,8 @@ body{
 .gameWindow{
 	display: none;
 }
+
+#chatDiv{
+	overflow: scroll;
+	height: 250px;
+}

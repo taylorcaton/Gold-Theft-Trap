@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link type="text/css" href="assets/css/reset.css" rel="stylesheet">
+    <link type="text/css" href="assets/css/style.css" rel="stylesheet">
+    
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    <!-- Bootswatch -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/darkly/bootstrap.min.css">
+
+
+
+</head>
+<body>
+<div class="jumbotron">
+    <div class="container">
+        <h1 class="text-center">Rock Paper Scissors</h1>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="row" id="message_container">
+        <div class="top_message message col-xs-12">
+            <form>
+                <div class="form-group">
+                    <label for="name_input">Your Name</label>
+                    <input id="name_input" type="text" name="name">
+                    <button type="button" id="name_button" class="btn btn-sm btn-primary">Submit</button> 
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="lower_message message row">
+
+    </div>
+
+
+    <div class="box_container_div row">
+
+        <div class="panel panel-default col-sm-3">
+            <div class="panel-heading">
+                <h3 class="panel-title text-center" id="player1NameBox">Waiting for Player 1</h3>
+            </div>
+            <div class="panel-body">
+                <div id="player1RPS" class="sub_box_2">
+
+                </div>
+                <div id="player1Stats" class="sub_box_3">
+
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default center_box col-sm-4 col-sm-offset-1">
+            
+        </div>
+
+        <div class="panel panel-default col-sm-3 col-sm-offset-1">
+            <div class="panel-heading">
+                <h3 class="panel-title text-center" id="player2NameBox">Waiting for Player 2</h3>
+            </div>
+            <div class="panel-body">
+                <div id="player2RPS" class="sub_box_2">
+
+                </div>
+                <div id="player2Stats" class="sub_box_3">
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <div class="row">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Chat</h3>
+            </div>
+            <div class="panel-body text_box">
+                Panel content
+            </div>
+            <div class="text_area text-center">
+                <input class="chat_text" type="text" name="name">
+                <button id="chat_button" type="button" class="btn btn-sm btn-default">Submit</button>
+            </div>
+        </div>
+    </div>
+    
+
+    
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery.js"></script>
+
+<!-- Latest compiled and minified JS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+<script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
