@@ -211,7 +211,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
             $("#status").empty().text("Make a choice");
 
 
-            $("#player2RPS")
+            $("#player2RPS").empty()
                 .append($("<div class='rockButton'>")
                     .append("<button type='button' class='btn btn-block btn-primary gameButton'>GOLD</button>")
                     .on("click", function () {
