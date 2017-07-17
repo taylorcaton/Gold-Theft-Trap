@@ -1,4 +1,3 @@
-// Initialize Firebase
 var config = {
   apiKey: "AIzaSyAS9DHcHwp3ZjxBU_WBtBy04htrMQ3ql64",
   authDomain: "rps-multiplayer-bc9e6.firebaseapp.com",
@@ -11,393 +10,433 @@ var config = {
 firebase.initializeApp(config);
 
 var database = firebase.database();
+var chatMessage;
+var playerName;
+var player1 = false;
+var player2 = false;
+var choice1;
+var choice2;
+var chat_array = [];
+var player1Name;
+var player2Name;
+var g1;
+var g2;
 
-var playerID;
-var gameReady = false;
-var chatActive = false;
-var once = true;
-var user = {};
-var chat = {};
-var userKey;
-var userKeys;
-var userList;
+function new_round_init(){
+    database.ref("round").remove();
 
-// connectionsRef references a specific location in our database.
-// All of our connections will be stored in this directory.
-var connectionsRef = database.ref("/connections");
-
-// '.info/connected' is a special location provided by Firebase that is updated
-// every time the client's connection state changes.
-// '.info/connected' is a boolean value, true if the client is connected and false if they are not.
-var connectedRef = database.ref(".info/connected");
-
-// When the client's connection state changes...
-connectedRef.on("value", function(snap) {
-
-  // If they are connected..
-  if (snap.val()) {
-
-    // Add user to the connections list.
-    var con = connectionsRef.push(true);
-    // Remove user from the connection list when they disconnect.
-    con.onDisconnect().remove();
-  }
-});
-
-// When first loaded or when the connections list changes...
-connectionsRef.on("value", function(snap) {
-
-  // Display the viewer count in the html.
-  // The number of online users is the number of children in the connections list.
-  // $("#connectedPlayers").text(snap.numChildren());
-
-  if(snap.numChildren() < 2){
-    // Waiting for players to connect
-    gameWait();
-    playerID = 1;
-    user.uid = 1;
-    user.displayName = "Player 1"
-    gameReady = false;
-    database.ref("user").remove(); //INIT REMOVE USERS
-
-  }else if(snap.numChildren() === 2){
-    
-    if(playerID !== 1){
-      playerID = 2;
-      user.uid = 2;
-      user.displayName = "Player 2"
+    if(g1===5 && g2 === 5){
+        console.log("It's a tie");
+        swal("It's a tie", "Gold will reset")
+        resetGold();
+        
+    }else if(g1 >= 5){
+        console.log("Player 1 WINS!");
+        swal(player1Name + 'WINS!')
+        resetGold();
+        
+    }else if(g2 >= 5){
+        console.log("Player 2 WINS!");
+        swal(player2Name + 'WINS!')
+        resetGold();
+        
     }
+}
 
-    gameReady = true;
-    updateScores();
-    gameStart();
+function resetGold(){
+    database.ref("Players/1/Gold").set(0);
+    database.ref("Players/2/Gold").set(0);
+}
 
-  }else{
-    // Players are spectating...
-      gameFull();
-  }
+//Set up the player boxes
+$("#name_button").on("click", function () {
 
+    playerName = $("#name_input").val(); //Capture the name
+    
+    database.ref().once("value", function (snapshot) {
+        
+        //If user is the first to connect, create a firebase ref for Players
+        //Assign an object of 1 the values listed.
+        //This user will be player 2
+        if (snapshot.child("Players/1").exists() == false) {
+            player1 = true; //Only true for player 1's screen
+            database.ref("Players/1").set({
+                Losses: 0, 
+                Name: playerName, 
+                Wins: 0,
+                Gold: 0
+            });
+            $("#player1NameBox").html(playerName); //Place name in panel heading
+            $(".message").remove();
+
+        //If there is already a user connected, create a firebase ref for Player 2
+        //This user will be player 2
+        } else if (snapshot.child("Players/1").exists()) {
+            player2 = true; //Only true for player 2's screen
+            database.ref('Players/2').set({
+                Losses: 0, 
+                Name: playerName, 
+                Wins: 0,
+                Gold: 0
+            });
+            $("#player2NameBox").html(playerName); //Place name in panel heading
+            $(".message").remove();
+        }
+    });
 });
 
-function gameWait(){
-  $("#gameStatus").html("<p>"+"Waiting for other player " + "<i class='fa fa-spinner fa-pulse fa-1x fa-fw'></i>");
-}
+database.ref().on("value", function (snapshot) { //Anytime a value changes in firebase
 
-function gameStart(){
-  $("#gameStatus").html("<p>"+"Lets begin!");
-  buildGameArea();
-}
-
-function gameFull(){
-  $("#gameStatus").html("<p>"+"Sorry, the game is full right now");
-}
-
-function buildGameArea(){
-  
-  if(gameReady){
-    //Display control and chat windows
-    $(".gameWindow").show();
-
-    buildButtons();
-    initChat();
-    setupUserRef();
-
-  }else{
-    $(".gameWindow").hide();
-  }
-  
-
-}
-
-function buildButtons(){
-  var newDiv = $("<div>");
-  playerID;
-  newDiv.append("<button type='button' id='goldButton' data-player='"+playerID+"' class='btn btn-primary btn-block btn-lg gameButton'>GOLD</button>")
-  newDiv.append("<button type='button' id='theftButton' data-player='"+playerID+"' class='btn btn-primary btn-block btn-lg gameButton'>THEFT</button>")
-  newDiv.append("<button type='button' id='trapButton' data-player='"+playerID+"' class='btn btn-primary btn-block btn-lg gameButton'>TRAP</button>")
-  
-  $("#controlsWindow").empty();
-  $("#controlsWindow").append(newDiv);  
-}
-
-//Button Actions
-$(document).on("click", ".gameButton", function(){
-
-  var playerID = $(this).attr("data-player"); //get the playerID
-  var tempPlayerChoice = $(this).attr("id") //get the choice
-  tempPlayerChoice = tempPlayerChoice.substring(0, tempPlayerChoice.indexOf("Button"));
-
-  console.log("Player " + playerID + " chooses " + tempPlayerChoice);
-  user.choice = tempPlayerChoice;
-
-  pushToChat({
-    user: "Game Master",
-    timeStamp: moment().format("h:mm:ss a"),
-    message: user.displayName + " has locked in a choice!"
-  })
-
-  updateUser();
-
-})
-
-//Chat Window Framework
-function initChat(){
-
-  // deleteOldChat(); //DELTES OLD CHAT
-
-  //CREATES A CHAT REF
-  var rootRef = database.ref()
-  var storesRef = rootRef.child('chat')
-  var newStoreRef = storesRef.push()
-  // newStoreRef.set({
-  //   user: "Game Master",
-  //   timeStamp: moment().format("h:mm:ss a"),
-  //   message: ""
-  // })
-
-  $("#firebaseChat").empty //BUILD THE CHAT WINDOW
-  if(once){
-    var newDiv = $("<form><div class='form-group'>")
-    
-    newDiv.append("<label for='displayName'>Enter Your Name</label>");
-    newDiv.append("<input class='form-control' id='displayName' type='text'>");
-    newDiv.append("<button class='btn btn-primary' id='submitDisplayName' type='submit'>Enter Chat</button>")
-
-    $("#firebaseChat").append(newDiv)
-    once = false;
-  }
-
-}
-
-//Captures the display name
-$(document).on("click", "#submitDisplayName", function(){
-  event.preventDefault();
-  user.displayName = $("#displayName").val().trim();
-  if(user.displayName === ""){
-    user.displayName = "Player " + playerID;
-  }
-  $("#firebaseChat").empty()
-  chatInterface()
-  chatActive = true;
-  updateUser();
-})
-
-//build a chat window
-function chatInterface(){
-  if(!once){
-
-    $("#firebaseChat").empty();
-    var chatDiv = $("<div id='chatDiv'>");
-    var submitDiv = $("<form><div class='form-group' id='submitDiv'>");
-
-    $("#firebaseChat").append(chatDiv);
-    
-
-    submitDiv.append("<input class='form-control' id='chatMessage' type='text'>")
-    submitDiv.append("<button type='button' id='submitMessage' class='btn btn-primary'>Submit</button>")
-    $("#firebaseChat").append(submitDiv);
-
-  }
-
-}
-
-//Captures the chat message, user, and time
-$(document).on("click", "#submitMessage", function(){
-  event.preventDefault();
-  
-  var chatObj = {
-    user: user.displayName,
-    timeStamp: moment().format("h:mm:ss a"),
-    message: $("#chatMessage").val().trim()
-  }
-
-  $("#chatMessage").val("");
-  pushToChat(chatObj);
-
-});
-
-//What the enter key does
-$(document).keypress(function(event){
-
-    if (event.keyCode === 10 || event.keyCode === 13){ 
-        event.preventDefault();
-        if(chatActive){
-          pushToChat();
+    //Update Player 1's details
+    if (snapshot.child("Players/1").exists()) {
+        $("#player1NameBox").html(snapshot.child("Players/1/Name").val());
+        $("#player1Stats").html("Gold: " + snapshot.child("Players/1/Gold").val());
+        player1Name = snapshot.child("Players/1/Name").val();
+    }
+    else {
+        if (($("#player1NameBox").text().trim() != "Waiting for Player 1")&&(player2)){
+            $("#player1NameBox").html("Waiting for Player 1");
+            $("#player1Stats").empty()
+            chatMessage = player1Name + " Has Disconnected";
+            database.ref("Chat").push(chatMessage);
         }
     }
 
-  });
-
-//Pushes the chatObj to Firebase
-function pushToChat(chatObj){
-
-  database.ref("chat").push(chatObj)
-}
-
-//Places all the messages (from Firebase) on the chat window
-function buildChatTable(){
-
-  $("#chatDiv").empty();
-  newTable = $("<table><tbody>")
-
-  var chatKeys = Object.keys(chat);
-
-  for (var i = 0; i < chatKeys.length; i++) {
-    var tr = $("<tr>");
-    tr.append("<td>"  + "("+chat[chatKeys[i]].timeStamp+")"  
-                      + " " + chat[chatKeys[i]].user + ": " + chat[chatKeys[i]].message);
-    newTable.append(tr);
-    
-  }
-
-  $("#chatDiv").append(newTable);
-
-}
-
-//Refesh the chat window everytime someone pushes a message
-database.ref("chat").on("value", function(snapshot) {
-  chat = snapshot.val();
-  buildChatTable();
-})
-
-
-//Deletes the old chat before the start of a new game
-function deleteOldChat(){
-
-  database.ref("chat").remove();
-  
-}
-
-//Setup User Ref
-function setupUserRef(){
-
-  var rootRef = database.ref()
-  var storesRef = rootRef.child('user')
-  var newStoreRef = storesRef.push()
-  userKey = newStoreRef.push().key
-  user = {
-    displayName: user.displayName,
-    uid: user.uid,
-    choice: "",
-    gold: 0,
-    score: 0,
-    userKey: userKey
-  }
-  updateUser();
-}
-
-//Update user data to firebase
-function updateUser(){
-  console.log("Updating object: " + userKey);
-
-  var updates = {}
-  updates["/user/"+userKey] = user;
-  database.ref().update(updates)
-
-}
-
-function checkScore(){
-
-  userKeys = Object.keys(userList);
-  var players = [];
-
-  for (var i = 0; i < userKeys.length; i++) {
-    if(userList[userKeys[i]].choice === ""){
-        console.log("Wating on other player to make a choice");
-        $("#gameStatus").html("<p>"+"Wating on other player to make a choice...");
-        return;
-    }else{
-      players.push(userList[userKeys[i]]);
+    //Update Player 2's details
+    if (snapshot.child("Players/2").exists()) {
+        $("#player2NameBox").html(snapshot.child("Players/2/Name").val());
+        $("#player2Stats").html("Gold: " + snapshot.child("Players/2/Gold").val());
+        player2Name = snapshot.child("Players/2/Name").val();
+    }
+    else {
+        if (($("#player2NameBox").text().trim() != "Waiting for Player 2")&&(player1)){
+            $("#player2NameBox").html("Waiting for Player 2");
+            $("#player2Stats").empty();
+            chatMessage = player2Name + " Has Disconnected";
+            database.ref("Chat").push(chatMessage);
+        }
     }
 
-  }
 
-  if(players[0].choice === "gold" && players[1].choice === "gold"){
-    
-    players[0].gold++;
-    players[1].gold++;
-    console.log("Both Players picked GOLD, you each get a point");
-    $("#gameStatus").html("<p>"+"Both Players picked GOLD, you each get a point");
-  
-  }else if(players[0].choice === "gold" && players[1].choice === "theft"){
-    
-    players[1].gold = players[0].gold + players[1].gold;
-    players[0].gold = 0;
-    console.log(players[1].displayName + " stole all the gold from " + players[0].displayName + "!");
-    $("#gameStatus").html("<p>"+players[1].displayName + " stole all the gold from " + players[0].displayName + "!");
-  
-  }else if(players[1].choice === "gold" && players[0].choice === "theft"){
-    
-    players[0].gold = players[1].gold + players[0].gold;
-    players[1].gold = 0;
-    console.log(players[0].displayName + " stole all the gold from " + players[1].displayName + "!");
-    $("#gameStatus").html("<p>"+players[0].displayName + " stole all the gold from " + players[1].displayName + "!");
-  
-  }else if(players[1].choice === "gold" && players[0].choice === "trap"){
-    
-    players[1].gold++;
-    console.log(players[1].displayName + " gets one gold, " + players[0].displayName + "'s trap failed");
-    $("#gameStatus").html("<p>"+players[1].displayName + " gets one gold, " + players[0].displayName + "'s trap failed");
-  
-  }else if(players[0].choice === "gold" && players[1].choice === "trap"){
-    
-    players[1].gold++;
-    console.log(players[0].displayName + " gets one gold, " + players[1].displayName + "'s trap failed");
-    $("#gameStatus").html("<p>"+players[0].displayName + " gets one gold, " + players[1].displayName + "'s trap failed");
-  
-  }else if(players[0].choice === "theft" && players[1].choice === "trap"){
-    
-    players[1].gold = 0;
-    players[0].gold = 0;
-    players[1].score++;
-    console.log(players[1].displayName + "'s trap killed " + players[0].displayName + "! " + players[1].displayName + " wins!");
-    $("#gameStatus").html("<p>"+players[1].displayName + "'s trap killed " + players[0].displayName + "! " + players[1].displayName + " wins!");
-  
-  }else if(players[1].choice === "theft" && players[0].choice === "trap"){
-    
-    players[1].gold = 0;
-    players[0].gold = 0;
-    players[0].score++;
-    console.log(players[0].displayName + "'s trap killed " + players[1].displayName + "! " + players[0].displayName + " wins!");
-    $("#gameStatus").html("<p>"+players[0].displayName + "'s trap killed " + players[1].displayName + "! " + players[0].displayName + " wins!");
-  
-  }else if(players[1].choice === "theft" && players[0].choice === "theft"){
-    
-    console.log("Both players try to steal, and both FAIL");
-    $("#gameStatus").html("<p>"+"Both players try to steal, and both FAIL");
-  
-  }else if(players[1].choice === "trap" && players[0].choice === "trap"){
-    
-    console.log("Both traps FAIL");
-    $("#gameStatus").html("<p>"+"Both traps FAIL");
-  
-  }
+    //If Either Player Disconnects remove them from the firebase ref
+    if (player1) {
+
+        database.ref("Players/1").onDisconnect().remove();
+        database.ref("round").onDisconnect().remove();
 
 
-  players[0].choice = "";
-  players[1].choice = "";
+    } else if (player2) {
 
-  var updates = {}
-  updates["/user/"+players[0].userKey] = players[0];
-  updates["/user/"+players[1].userKey] = players[1];
-  database.ref().update(updates)
+        database.ref("Players/2").onDisconnect().remove();
+        database.ref("round").onDisconnect().remove();
 
-  updateScores();
+    }
 
-}
+    //Remove the highlighter effect and button controls AFTER the end of a round
+    if (snapshot.child("round").exists() == false) {
+        $("#player1Box").removeClass("highLighter");
+        $("#player2Box").removeClass("highLighter");
+        $("#centerDisplay").removeClass("highLighter").empty();
+        $("#player1RPS").empty();
+        $("#player2RPS").empty();
+    }
 
-database.ref("user").on("value", function(snapshot) {
-  
-  console.log("Users updated")
+    //Begin game if Player 1 and 2 are present and round 1 hasn't started yet
+    if (snapshot.child("Players/1").exists() && snapshot.child("Players/2").exists()) {
+        if(snapshot.child("round").exists() == false){
+            database.ref("round").set(1);
+        }
+    }
 
-  userList = snapshot.val();
-  userKeys = Object.keys(userList);
-  user = userList[userKeys[user.uid-1]];
-  checkScore();
-  
-})
+    //ROUND 1
+    //Player 1's Turn
+    if (snapshot.child('round').exists() && snapshot.val().round == 1) {
 
-function updateScores(){
-  $("#gold").html( "GOLD:  " + user.gold);
-  $("#score").html("SCORE: "+ user.score);
-}
+        //Highlight the player box
+        $("#player1Box").addClass("highLighter");
+
+        //Change Status area to display who's turn it is
+        $("#status").empty().text(player1Name + "'s turn...");
+
+        if (player1) {
+            //Displayed only on player 1's screen
+            $("#status").empty().text("Make a choice");
+
+
+            $("#player1RPS").empty() //Display Button Choioces
+                .append($("<div class='rockButton'>")
+                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>GOLD</button>")
+                    .on("click", function () { //Add Event Listener to Button
+                        database.ref('Players/1/Choice').set("Gold"); //Set player choice to firebase
+                        var img = $("<img>") 
+                        img.attr({src:'assets/images/gold.png', class:'gameSprite'});
+                        $("#player1RPS").empty().append(img); //display Gold
+                        database.ref().update({round: 2}) //Update firebase to 2nd round (player 2's turn)
+                    }))
+                .append($("<div class='paperButton'>")
+                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>THEFT</button>")
+                    .on("click", function () {
+                        database.ref('Players/1/Choice').set("Theft");
+                        var img = $("<img>") 
+                        img.attr({src:'assets/images/thiefL.png', class:'gameSprite'});
+                        $("#player1RPS").empty().append(img); //display Theft
+                        database.ref().update({round: 2})
+                    }))
+                .append($("<div class='scissorsButton'>")
+                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>TRAP</button>")
+                    .on("click", function () {
+                        database.ref('Players/1/Choice').set("Trap");
+                        var img = $("<img>") 
+                        img.attr({src:'assets/images/trap.png', class:'gameSprite'});
+                        $("#player1RPS").empty().append(img);
+                        database.ref().update({round: 2})
+                    }))
+        }
+    //ROUND 2
+    //PLAYER 2's Turn    
+    } else if (snapshot.child('round').exists() && snapshot.val().round == 2) {
+        
+        //Remove Highlight from Player 1
+        $("#player1Box").removeClass("highLighter");
+
+        //Highlight Player 2's Box
+        $("#player2Box").addClass("highLighter");
+
+        //Change Status area to display who's turn it is
+        $("#status").empty().text(player2Name + "'s turn...");
+
+
+        if (player2) {
+            //Displayed only on player 2's screen
+            $("#status").empty().text("Make a choice");
+
+
+            $("#player2RPS")
+                .append($("<div class='rockButton'>")
+                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>GOLD</button>")
+                    .on("click", function () {
+                        database.ref('Players/2/Choice').set("Gold");
+                        var img = $("<img>") 
+                        img.attr({src:'assets/images/gold.png', class:'gameSprite'});
+                        $("#player2RPS").empty().append(img);
+                        database.ref().update({round: 3})
+                    }))
+                .append($("<div class='paperButton'>")
+                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>THEFT</button>")
+                    .on("click", function () {
+                        database.ref('Players/2/Choice').set("Theft");
+                        var img = $("<img>") 
+                        img.attr({src:'assets/images/thiefR.png', class:'gameSprite'});
+                        $("#player2RPS").empty().append(img);
+                        database.ref().update({round: 3})
+                    }))
+                .append($("<div class='scissorsButton'>")
+                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>TRAP</button>")
+                    .on("click", function () {
+                        database.ref('Players/2/Choice').set("Trap");
+                        var img = $("<img>") 
+                        img.attr({src:'assets/images/trap.png', class:'gameSprite'});
+                        $("#player2RPS").empty().append(img);
+                        database.ref().update({round: 3});
+
+                    }));
+
+        }
+    }else if ((snapshot.child('Players/1/Choice').val() && snapshot.child('Players/2/Choice').val() != null) && snapshot.val().round == 3) {
+        $("#player2Box").removeClass("highLighter");
+
+        choice1 = snapshot.child("Players/1/Choice").val(); //fetch player 1's choice
+        choice2 = snapshot.child("Players/2/Choice").val(); //fetch player 2's choice
+        
+        //SHOW CHOICES TO BOTH PLAYERS
+        var img1 = $("<img>")
+        var img2 = $("<img>")
+
+        switch (choice1) {
+            case "Rock":
+                img1.attr({src:'assets/images/gold.png', class:'gameSprite'});
+                break;
+            case "Paper":
+                img1.attr({src:'assets/images/thiefL.png', class:'gameSprite'});
+                break;
+            case "Scissors":
+                img1.attr({src:'assets/images/trap.png', class:'gameSprite'});
+                break;
+        }
+
+        switch (choice2) {
+            case "Rock":
+                img2.attr({src:'assets/images/gold.png', class:'gameSprite'});
+                break;
+            case "Paper":
+                img2.attr({src:'assets/images/thiefR.png', class:'gameSprite'});
+                break;
+            case "Scissors":
+                img2.attr({src:'assets/images/trap.png', class:'gameSprite'});
+                break;
+        }
+
+        //Show both players their opponents choice!
+        $("#player1RPS").empty().append(img1);
+        $("#player2RPS").empty().append(img2); 
+
+
+        //GOLD - THEFT - TRAP LOGIC
+        if (choice1 == "Gold" && choice2 == "Gold")  { //BOTH GOLD
+
+            $("#player1Box").addClass("highLighter"); //Highlight both players
+            $("#player2Box").addClass("highLighter");
+
+            $("#centerDisplay").html("<h2>You each get 1 Gold</h2>"); //Update the center box
+
+            g1 = snapshot.child("Players/1/Gold").val();
+            g2 = snapshot.child("Players/2/Gold").val();
+            g1++;
+            g2++;
+
+            database.ref("Players/1/Choice").remove();
+            database.ref("Players/2/Choice").remove();
+
+            database.ref("Players/1/Gold").set(g1);
+            database.ref("Players/2/Gold").set(g2);
+            setTimeout(new_round_init, 5000)
+
+        }else if (choice1 == "Gold" && choice2 == "Theft")  { //P1 GOLD & P2 THEFT
+
+            $("#player2Box").addClass("highLighter"); //Highlight P2
+
+            $("#centerDisplay").html("<h2>" + player2Name + " steals ALL the gold!</h2>"); //Update the center box
+
+            g1 = snapshot.child("Players/1/Gold").val();
+            g2 = snapshot.child("Players/2/Gold").val();
+            g2+=g1+1;
+            g1=0;
+
+            database.ref("Players/1/Choice").remove();
+            database.ref("Players/2/Choice").remove();
+
+            database.ref("Players/1/Gold").set(g1);
+            database.ref("Players/2/Gold").set(g2);
+            setTimeout(new_round_init, 5000)
+
+        }else if (choice1 == "Theft" && choice2 == "Gold")  { //P1 THEFT & P2 GOLD
+
+            $("#player1Box").addClass("highLighter"); //Highlight P1
+
+            $("#centerDisplay").html("<h2>" + player1Name + " steals ALL the gold!</h2>"); //Update the center box
+
+            g1 = snapshot.child("Players/1/Gold").val();
+            g2 = snapshot.child("Players/2/Gold").val();
+            g1+=g2+1;
+            g2=0;
+
+            database.ref("Players/1/Choice").remove();
+            database.ref("Players/2/Choice").remove();
+
+            database.ref("Players/1/Gold").set(g1);
+            database.ref("Players/2/Gold").set(g2);
+            setTimeout(new_round_init, 5000)
+
+        }else if (choice1 == "Gold" && choice2 == "Trap")  { //P1 GOLD & P2 TRAP
+
+            $("#player1Box").addClass("highLighter"); //Highlight P1
+
+            $("#centerDisplay").html("<h2>" + player1Name + " gets one gold!</h2>"); //Update the center box
+
+            g1 = snapshot.child("Players/1/Gold").val();
+            
+            g1++;
+
+            database.ref("Players/1/Choice").remove();
+            database.ref("Players/2/Choice").remove();
+
+            database.ref("Players/1/Gold").set(g1);
+            setTimeout(new_round_init, 5000)
+
+        }else if (choice1 == "Trap" && choice2 == "Gold")  { //P1 Trap & P2 Gold
+
+            $("#player2Box").addClass("highLighter"); //Highlight P2
+
+            $("#centerDisplay").html("<h2>" + player2Name + " gets one gold!</h2>"); //Update the center box
+
+            g2 = snapshot.child("Players/2/Gold").val();
+            
+            g2++;
+
+            database.ref("Players/1/Choice").remove();
+            database.ref("Players/2/Choice").remove();
+
+            database.ref("Players/2/Gold").set(g2);
+            setTimeout(new_round_init, 5000)
+
+        }else if (choice1 == "Theft" && choice2 == "Trap")  { //P1 Theft & P2 Trap
+
+            $("#player2Box").addClass("highLighter"); //Highlight P2
+
+            $("#centerDisplay").html("<h2>" + player2Name + " 's Trap Works!</h2>"); //Update the center box
+
+            g2 = snapshot.child("Players/2/Gold").val();
+            
+            g2=5;
+
+            database.ref("Players/1/Choice").remove();
+            database.ref("Players/2/Choice").remove();
+
+            database.ref("Players/2/Gold").set(g2);
+            setTimeout(new_round_init, 5000)
+
+        }else if (choice1 == "Trap" && choice2 == "Theft")  { //P1 Trap & P2 Theft
+
+            $("#player1Box").addClass("highLighter"); //Highlight P1
+
+            $("#centerDisplay").html("<h2>" + player1Name + " 's Trap Works!</h2>"); //Update the center box
+
+            g1 = snapshot.child("Players/1/Gold").val();
+            
+            g1=5;
+
+            database.ref("Players/1/Choice").remove();
+            database.ref("Players/2/Choice").remove();
+
+            database.ref("Players/1/Gold").set(g2);
+            setTimeout(new_round_init, 5000)
+
+        }else if (choice1 == choice2) { //TIE CASE
+
+            $("#centerDisplay").addClass("highLighter").html("<h2>You Both Chose"+choice1+", Nothing Happens</h2>");
+            setTimeout(new_round_init, 5000) //WAIT 5 SECONDS TO START A NEW ROUND
+
+        } 
+
+    }
+});
+
+$("#chat_button").on("click", function () {
+    if (playerName != undefined) {
+        chatMessage = "(" + moment().format("hh:mm:ss a") + ") ";
+        chatMessage += playerName + ": " + $(".chat_text").val();
+        database.ref("Chat").push(chatMessage);
+    }
+});
+
+database.ref("Chat").on("value",function (snapshot) {
+    $(".text_box").empty();
+    for (var i in snapshot.val()){
+        $(".text_box").append($("<div>").html(snapshot.val()[i]));
+    }
+
+});
+
+$(document).on("click", "#instructions", function(){
+    
+    var div = $("<div>");
+    div.append("<p><strong>Gold:</strong> you will immediately gain 1 Gold.</p>");
+    div.append("<p><strong>Theft:</strong> you gain all the gold the opposing player has. Also, if they chose the Gold this round you get the Gold they would have gained from that too.<p>")
+    div.append("<p><strong>Trap:</strong> it does nothing unless the opposing player played Theft. If they did, your trap kills them in the act of thieving and you instantly win the game.</p>")  
+
+    swal({
+        title: 'How to Play',
+        html: $("<div>").html(div),
+    });
+
+});
