@@ -442,9 +442,9 @@ database.ref("Chat").on("value",function (snapshot) {
 $(document).on("click", "#instructions", function(){
     
     var div = $("<div>");
-    div.append("<p><strong>Gold:</strong> you will immediately gain 1 Gold.</p>");
-    div.append("<p><strong>Theft:</strong> you gain all the gold the opposing player has. Also, if they chose the Gold this round you get the Gold they would have gained from that too.<p>")
-    div.append("<p><strong>Trap:</strong> it does nothing unless the opposing player played Theft. If they did, your trap kills them in the act of thieving and you instantly win the game.</p>")  
+    div.append("<p><strong>Gold:</strong> Immediately gain 1 Gold.</p>");
+    div.append("<p><strong>Theft:</strong> Gain all the gold the opposing player has. Also, if they chose the Gold this round you get the Gold they would have gained from that too.<p>")
+    div.append("<p><strong>Trap:</strong> Does nothing unless the opposing player played Theft. If they did, your trap kills them in the act of thieving and you instantly win the game.</p>")  
 
     swal({
         title: 'How to Play',
