@@ -29,6 +29,7 @@
 <div class="jumbotron">
     <div class="container text-center">
         <h1 class="text-center">GOLD - THEFT - TRAP</h1>
+        <p class="lead">A Variation on Rock, Paper, Scissors</p>
         <button type="button" class="btn btn-primary" id="instructions">How to Play</button>
     </div>
 </div>
@@ -52,7 +53,7 @@
     </div>
 
 
-    <div class="box_container_div row">
+    <div class="row">
 
         <div class="panel panel-default col-sm-3" id="player1Box">
             <div class="panel-heading">
@@ -62,7 +63,7 @@
                 <div id="player1RPS">
 
                 </div>
-                <div id="player1Stats">
+                <div class="text-center" id="player1Stats">
 
                 </div>
             </div>
@@ -80,7 +81,7 @@
                 <div id="player2RPS">
 
                 </div>
-                <div id="player2Stats">
+                <div class="text-center" id="player2Stats">
 
                 </div>
             </div>
@@ -93,12 +94,16 @@
             <div class="panel-heading">
                 <h3 class="panel-title">Chat</h3>
             </div>
-            <div class="panel-body text_box">
-                Panel content
+            <div class="panel-body chatWindow">
+                Chat Window
             </div>
             <div class="text_area text-center">
-                <input class="chat_text" type="text" name="name">
-                <button id="chat_button" type="button" class="btn btn-sm btn-default">Submit</button>
+                <div class="input-group input-group">
+                    <input class="form-control chatTextBox" type="text" name="name">
+                    <span class="input-group-btn">
+                        <button id="chatSubmit" type="button" class="btn btn-default">Submit</button>
+                    </span>
+                </div>
             </div>
         </div>
     </div>

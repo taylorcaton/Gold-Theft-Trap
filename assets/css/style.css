@@ -4,7 +4,7 @@ body{
 }
 
 .jumbotron{
-    background: url('https://s-media-cache-ak0.pinimg.com/originals/29/68/95/2968950d59550168845f030faf2d2647.png');
+    background: url('https://c1.staticflickr.com/8/7282/9263924434_aba98b6249_b.jpg');
     background-size: cover; 
 }
 
@@ -27,22 +27,22 @@ h1{
     margin-bottom: 15px;
 }
 
-.text_box{
+.chatWindow{
     height: 300px;
     width:100%;
     overflow-y: scroll;
 }
 
-.box{
-    
-    height: 200px;
-    border: solid 2px #000000;
-    background-color: #b9f8ec;
-    
+#chatTable{
+    width: 100%;
 }
 
-.chat_text{
-    width: 91%;
+#chatTable tr:nth-child(2n) {  
+  background-color: #464545;
+}
+
+.gameButton{
+    border-radius: 0px;
 }
 
 .highLighter{
@@ -53,9 +53,29 @@ h1{
     width: 100%;
 }
 
+.rockButton button{
+    color: #dad45e;
+}
+
+.paperButton button{
+    color: black;
+}
+
+.scissorsButton button{
+    color: darkred;
+}
+
 @media only screen and (max-width: 1000px) {
     
     h1{
         font-size: 44px !important;
+    }
+}
+
+@media screen and (min-width: 768px){
+
+    .jumbotron {
+        padding-top: 20px;
+        padding-bottom: 20px;
     }
 }

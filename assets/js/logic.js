@@ -165,7 +165,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
 
             $("#player1RPS").empty() //Display Button Choioces
                 .append($("<div class='rockButton'>")
-                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>GOLD</button>")
+                    .append("<button type='button' class='btn btn-lg btn-block btn-primary gameButton'>GOLD</button>")
                     .on("click", function () { //Add Event Listener to Button
                         database.ref('Players/1/Choice').set("Gold"); //Set player choice to firebase
                         var img = $("<img>") 
@@ -174,7 +174,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
                         database.ref().update({round: 2}) //Update firebase to 2nd round (player 2's turn)
                     }))
                 .append($("<div class='paperButton'>")
-                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>THEFT</button>")
+                    .append("<button type='button' class='btn btn-lg btn-block btn-primary gameButton'>THEFT</button>")
                     .on("click", function () {
                         database.ref('Players/1/Choice').set("Theft");
                         var img = $("<img>") 
@@ -183,7 +183,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
                         database.ref().update({round: 2})
                     }))
                 .append($("<div class='scissorsButton'>")
-                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>TRAP</button>")
+                    .append("<button type='button' class='btn btn-lg btn-block btn-primary gameButton'>TRAP</button>")
                     .on("click", function () {
                         database.ref('Players/1/Choice').set("Trap");
                         var img = $("<img>") 
@@ -213,7 +213,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
 
             $("#player2RPS").empty()
                 .append($("<div class='rockButton'>")
-                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>GOLD</button>")
+                    .append("<button type='button' class='btn btn-lg btn-block btn-primary gameButton'>GOLD</button>")
                     .on("click", function () {
                         database.ref('Players/2/Choice').set("Gold");
                         var img = $("<img>") 
@@ -222,7 +222,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
                         database.ref().update({round: 3})
                     }))
                 .append($("<div class='paperButton'>")
-                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>THEFT</button>")
+                    .append("<button type='button' class='btn btn-lg btn-block btn-primary gameButton'>THEFT</button>")
                     .on("click", function () {
                         database.ref('Players/2/Choice').set("Theft");
                         var img = $("<img>") 
@@ -231,7 +231,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
                         database.ref().update({round: 3})
                     }))
                 .append($("<div class='scissorsButton'>")
-                    .append("<button type='button' class='btn btn-block btn-primary gameButton'>TRAP</button>")
+                    .append("<button type='button' class='btn btn-lg btn-block btn-primary gameButton'>TRAP</button>")
                     .on("click", function () {
                         database.ref('Players/2/Choice').set("Trap");
                         var img = $("<img>") 
@@ -411,22 +411,34 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
     }
 });
 
-$("#chat_button").on("click", function () {
-    if (playerName != undefined) {
+$("#chatSubmit").on("click", function () {
+
+    if (playerName != undefined) { //if playerName has a value
         chatMessage = "(" + moment().format("hh:mm:ss a") + ") ";
-        chatMessage += playerName + ": " + $(".chat_text").val();
+        chatMessage += playerName + ": " + $(".chatTextBox").val();
         database.ref("Chat").push(chatMessage);
     }
+
 });
 
+//Place each chat message on it's own line
 database.ref("Chat").on("value",function (snapshot) {
-    $(".text_box").empty();
+    $(".chatWindow").empty();
+    $(".chatWindow").append("<table id='chatTable'>")
     for (var i in snapshot.val()){
-        $(".text_box").append($("<div>").html(snapshot.val()[i]));
+
+        var tr = $("<tr>");
+        tr.append(snapshot.val()[i]); //Uses the key name to fetch the data.
+
+        $("#chatTable").append(tr);
     }
 
+    //Scroll to last chat message
+    $(".chatWindow").scrollTop( $(".chatWindow").get(0).scrollHeight )
+
 });
 
+//Instructions Sweet Alert
 $(document).on("click", "#instructions", function(){
     
     var div = $("<div>");
