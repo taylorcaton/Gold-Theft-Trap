@@ -178,7 +178,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
                     .on("click", function () {
                         database.ref('Players/1/Choice').set("Theft");
                         var img = $("<img>") 
-                        img.attr({src:'assets/images/thiefL.png', class:'gameSprite'});
+                        img.attr({src:'assets/images/ThiefL.png', class:'gameSprite'});
                         $("#player1RPS").empty().append(img); //display Theft
                         database.ref().update({round: 2})
                     }))
@@ -226,7 +226,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
                     .on("click", function () {
                         database.ref('Players/2/Choice').set("Theft");
                         var img = $("<img>") 
-                        img.attr({src:'assets/images/thiefR.png', class:'gameSprite'});
+                        img.attr({src:'assets/images/ThiefR.png', class:'gameSprite'});
                         $("#player2RPS").empty().append(img);
                         database.ref().update({round: 3})
                     }))
@@ -257,7 +257,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
                 img1.attr({src:'assets/images/gold.png', class:'gameSprite'});
                 break;
             case "Paper":
-                img1.attr({src:'assets/images/thiefL.png', class:'gameSprite'});
+                img1.attr({src:'assets/images/ThiefL.png', class:'gameSprite'});
                 break;
             case "Scissors":
                 img1.attr({src:'assets/images/trap.png', class:'gameSprite'});
@@ -269,7 +269,7 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
                 img2.attr({src:'assets/images/gold.png', class:'gameSprite'});
                 break;
             case "Paper":
-                img2.attr({src:'assets/images/thiefR.png', class:'gameSprite'});
+                img2.attr({src:'assets/images/ThiefR.png', class:'gameSprite'});
                 break;
             case "Scissors":
                 img2.attr({src:'assets/images/trap.png', class:'gameSprite'});
