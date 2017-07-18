@@ -6,6 +6,7 @@ body{
 .jumbotron{
     background: url('https://c1.staticflickr.com/8/7282/9263924434_aba98b6249_b.jpg');
     background-size: cover; 
+    border-bottom: 2px solid #c9c9c9;
 }
 
 h1{
