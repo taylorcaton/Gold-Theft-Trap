@@ -414,6 +414,8 @@ database.ref().on("value", function (snapshot) { //Anytime a value changes in fi
 $("#chatSubmit").on("click", function () {
 
     if (playerName != undefined) { //if playerName has a value
+
+        $(".chatTextBox").val("");
         chatMessage = "(" + moment().format("hh:mm:ss a") + ") ";
         chatMessage += playerName + ": " + $(".chatTextBox").val();
         database.ref("Chat").push(chatMessage);
@@ -425,7 +427,7 @@ $("#chatSubmit").on("click", function () {
 database.ref("Chat").on("value",function (snapshot) {
     $(".chatWindow").empty();
     $(".chatWindow").append("<table id='chatTable'>")
-    for (var i in snapshot.val()){
+    for (var i in snapshot.val()){ //enhanced for loop over the object!
 
         var tr = $("<tr>");
         tr.append(snapshot.val()[i]); //Uses the key name to fetch the data.
