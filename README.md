@@ -11,7 +11,7 @@ Theft: you gain all the gold the opposing player has. Also, if they chose the Go
 Trap: it does nothing unless the opposing player played Theft. If they did, your trap kills them in the act of thieving and you instantly win the game.
 
 ## Getting Started
-To play the game, you can visit https://taylorcaton.github.io/RPS-Multiplayer/ 
+To play the game, you can visit https://taylorcaton.github.io/Gold-Theft-Trap/ 
 
 ## Author
 Taylor Caton - https://github.com/taylorcaton
