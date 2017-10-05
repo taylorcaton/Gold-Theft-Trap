@@ -418,6 +418,7 @@ $("#chatSubmit").on("click", function () {
         $(".chatTextBox").val("");
         chatMessage = "(" + moment().format("hh:mm:ss a") + ") ";
         chatMessage += playerName + ": " + $(".chatTextBox").val();
+        console.log('new msg being sent to firebase: ' + chatMessage);
         database.ref("Chat").push(chatMessage);
     }
 
